@@ -10,6 +10,8 @@ import { Button } from "./ui/button";
 const temperatureProfileSchema = z.object({
   bedTime: z.string().regex(/^\d{2}:\d{2}$/, "Must be in HH:MM format"),
   wakeupTime: z.string().regex(/^\d{2}:\d{2}$/, "Must be in HH:MM format"),
+  midStageOffset: z.number().min(0).max(480),
+  finalStageOffset: z.number().min(0).max(480),
   initialSleepLevel: z.number().min(-10).max(10),
   midStageSleepLevel: z.number().min(-10).max(10),
   finalSleepLevel: z.number().min(-10).max(10),
@@ -40,6 +42,8 @@ export const TemperatureProfileForm: React.FC = () => {
     defaultValues: {
       bedTime: "22:00",
       wakeupTime: "06:00",
+      midStageOffset: 60,
+      finalStageOffset: 120,
       initialSleepLevel: 0,
       midStageSleepLevel: 0,
       finalSleepLevel: 0,
@@ -49,6 +53,8 @@ export const TemperatureProfileForm: React.FC = () => {
 
   const bedTime = watch("bedTime");
   const wakeupTime = watch("wakeupTime");
+  const midStageOffset = watch("midStageOffset");
+  const finalStageOffset = watch("finalStageOffset");
 
   const [sleepInfo, setSleepInfo] = useState({
     duration: "",
@@ -64,6 +70,8 @@ export const TemperatureProfileForm: React.FC = () => {
       const profile = getUserTemperatureProfileQuery.data;
       setValue("bedTime", profile.bedTime.slice(0, 5));
       setValue("wakeupTime", profile.wakeupTime.slice(0, 5));
+      setValue("midStageOffset", profile.midStageOffset ?? 60);
+      setValue("finalStageOffset", profile.finalStageOffset ?? 120);
       setValue("initialSleepLevel", profile.initialSleepLevel / 10);
       setValue("midStageSleepLevel", profile.midStageSleepLevel / 10);
       setValue("finalSleepLevel", profile.finalSleepLevel / 10);
@@ -96,8 +104,8 @@ export const TemperatureProfileForm: React.FC = () => {
         setSleepInfo({ duration: "", midStageTime: "", finalStageTime: "" });
       } else {
         setSleepDurationError(null);
-        const midStageDate = new Date(bedDate.getTime() + 60 * 60 * 1000); // 1 hour after bedtime
-        const finalStageDate = new Date(wakeDate.getTime() - 2 * 60 * 60 * 1000); // 2 hours before wakeup
+        const midStageDate = new Date(bedDate.getTime() + midStageOffset * 60 * 1000);
+        const finalStageDate = new Date(wakeDate.getTime() - finalStageOffset * 60 * 1000);
 
         setSleepInfo({
           duration: `${hours} hours ${minutes} minutes`,
@@ -106,7 +114,7 @@ export const TemperatureProfileForm: React.FC = () => {
         });
       }
     }
-  }, [bedTime, wakeupTime]);
+  }, [bedTime, wakeupTime, midStageOffset, finalStageOffset]);
 
   const updateProfileMutation =
     apiR.user.updateUserTemperatureProfile.useMutation({
@@ -141,6 +149,8 @@ export const TemperatureProfileForm: React.FC = () => {
     const mutationData = {
       bedTime: formatTimeForAPI(data.bedTime),
       wakeupTime: formatTimeForAPI(data.wakeupTime),
+      midStageOffset: data.midStageOffset,
+      finalStageOffset: data.finalStageOffset,
       initialSleepLevel: Math.round(data.initialSleepLevel * 10),
       midStageSleepLevel: Math.round(data.midStageSleepLevel * 10),
       finalSleepLevel: Math.round(data.finalSleepLevel * 10),
@@ -270,6 +280,56 @@ export const TemperatureProfileForm: React.FC = () => {
           {errors.wakeupTime && (
             <p className="mt-1 text-sm text-red-600">
               {errors.wakeupTime.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="midStageOffset"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Mid Stage Offset (minutes after bedtime)
+          </label>
+          <input
+            {...register("midStageOffset", { valueAsNumber: true })}
+            type="number"
+            id="midStageOffset"
+            min="0"
+            max="480"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Currently: {midStageOffset} minutes ({(midStageOffset / 60).toFixed(1)} hours)
+          </p>
+          {errors.midStageOffset && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.midStageOffset.message}
+            </p>
+          )}
+        </div>
+        
+        <div>
+          <label
+            htmlFor="finalStageOffset"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Final Stage Offset (minutes before wake-up)
+          </label>
+          <input
+            {...register("finalStageOffset", { valueAsNumber: true })}
+            type="number"
+            id="finalStageOffset"
+            min="0"
+            max="480"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Currently: {finalStageOffset} minutes ({(finalStageOffset / 60).toFixed(1)} hours)
+          </p>
+          {errors.finalStageOffset && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.finalStageOffset.message}
             </p>
           )}
         </div>
