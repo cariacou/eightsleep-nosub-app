@@ -24,6 +24,8 @@ export const userTemperatureProfile = createTable("userTemperatureProfiles", {
   email: varchar('email', { length: 255 }).references(() => users.email).primaryKey(),
   bedTime: time("bedTime").notNull(),
   wakeupTime: time("wakeupTime").notNull(),
+  midStageOffset: integer("midStageOffset").notNull().default(60),
+  finalStageOffset: integer("finalStageOffset").notNull().default(120),
   initialSleepLevel: integer("initialSleepLevel").notNull(),
   midStageSleepLevel: integer("midStageSleepLevel").notNull(),
   finalSleepLevel: integer("finalSleepLevel").notNull(),
