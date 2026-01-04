@@ -222,6 +222,8 @@ export const userRouter = createTRPCRouter({
       z.object({
         bedTime: z.string().time(),
         wakeupTime: z.string().time(),
+        midStageOffset: z.number().int().min(0).max(480),
+        finalStageOffset: z.number().int().min(0).max(480),
         initialSleepLevel: z.number().int().min(-100).max(100),
         midStageSleepLevel: z.number().int().min(-100).max(100),
         finalSleepLevel: z.number().int().min(-100).max(100),
@@ -235,6 +237,8 @@ export const userRouter = createTRPCRouter({
           email: decoded.email,
           bedTime: input.bedTime,
           wakeupTime: input.wakeupTime,
+          midStageOffset: input.midStageOffset,
+          finalStageOffset: input.finalStageOffset,
           initialSleepLevel: input.initialSleepLevel,
           midStageSleepLevel: input.midStageSleepLevel,
           finalSleepLevel: input.finalSleepLevel,
@@ -251,6 +255,8 @@ export const userRouter = createTRPCRouter({
             set: {
               bedTime: input.bedTime,
               wakeupTime: input.wakeupTime,
+              midStageOffset: input.midStageOffset,
+              finalStageOffset: input.finalStageOffset,
               initialSleepLevel: input.initialSleepLevel,
               midStageSleepLevel: input.midStageSleepLevel,
               finalSleepLevel: input.finalSleepLevel,
