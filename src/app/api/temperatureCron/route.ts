@@ -50,7 +50,7 @@ interface SleepCycle {
   wakeupTime: Date;
 }
 
-function createSleepCycle(baseDate: Date, bedTimeStr: string, wakeupTimeStr: string): SleepCycle {
+function createSleepCycle(baseDate: Date, bedTimeStr: string, wakeupTimeStr: string, midStageOffsetMinutes: number, finalStageOffsetMinutes: number): SleepCycle {
   const preHeatingTime = createDateWithTime(baseDate, bedTimeStr);
   preHeatingTime.setHours(preHeatingTime.getHours() - 1); // Set pre-heating to 1 hour before bedtime
   
@@ -62,8 +62,8 @@ function createSleepCycle(baseDate: Date, bedTimeStr: string, wakeupTimeStr: str
     wakeupTime = addDays(wakeupTime, 1);
   }
   
-  const midStageTime = new Date(bedTime.getTime() + 60 * 60 * 1000);
-  const finalStageTime = new Date(wakeupTime.getTime() - 2 * 60 * 60 * 1000);
+  const midStageTime = new Date(bedTime.getTime() + midStageOffsetMinutes * 60 * 1000);
+  const finalStageTime = new Date(wakeupTime.getTime() - finalStageOffsetMinutes * 60 * 1000);
   
   return { preHeatingTime, bedTime, midStageTime, finalStageTime, wakeupTime };
 }
@@ -126,7 +126,13 @@ export async function adjustTemperature(testMode?: TestMode): Promise<void> {
         const userNow = new Date(now.toLocaleString("en-US", { timeZone: userTemperatureProfile.timezoneTZ }));
 
         // Create the sleep cycle based on the user's bed time and wake-up time
-        const sleepCycle = createSleepCycle(userNow, userTemperatureProfile.bedTime, userTemperatureProfile.wakeupTime);
+        const sleepCycle = createSleepCycle(
+          userNow, 
+          userTemperatureProfile.bedTime, 
+          userTemperatureProfile.wakeupTime,
+          userTemperatureProfile.midStageOffset ?? 60,
+          userTemperatureProfile.finalStageOffset ?? 120
+        );
 
         // Adjust all times in the cycle to the current day
         const cycleStart = sleepCycle.preHeatingTime;
